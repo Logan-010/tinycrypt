@@ -1,0 +1,14 @@
+[package]
+name = "tinycrypt"
+version = "0.1.0"
+edition = "2021"
+description = "Small & simple encryption library with minimal dependencies"
+license = "The Unlicense"
+documentation = "https://docs.rs/tinycrypt"
+repository = "https://github.com/Logan-010/tinycrypt"
+
+[dependencies]
+aes-gcm-siv = { version = "0.11.1", default-features = false, features = ["aes", "getrandom", "alloc"] }
+bincode = { version = "1.3.3", default-features = false }
+rust-argon2 = { version = "2.1.0", default-features = false }
+serde = { version = "1.0.203", default-features = false, features = ["derive"] }
