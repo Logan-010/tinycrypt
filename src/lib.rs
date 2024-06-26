@@ -1,3 +1,32 @@
+//! # Tinycrypt
+//! A small & simple encryption library.
+//! 
+//! Exports two functions (encrypt & decrypt) along with an error type (CryptographyError) that implements std::error::Error.
+//! 
+//! Basic usage:
+//! ```rust
+//! use tinycrypt::{Encrypt, Decrypt, CryptographyError};
+//! 
+//! let data = "Hello world!";
+//! let secure_password = "password";
+//! 
+//! let encrypted_data: Vec<u8> = encrypt(data.as_bytes(), secure_password.as_bytes()).unwrap();
+//! 
+//! println!("Data encrypted!");
+//! 
+//! let decrypted_data: Vec<u8> = decrypt(&encrypted_data, password.as_bytes()).unwrap();
+//! 
+//! //Can also pattern match, to seperate invalid passwords from actual errors.
+//! match decrypt(&encrypted_data, password.as_bytes()) {
+//!     Ok(data) => (), //do something with data
+//!     Err(password_error @ CryptographyError::IncorrectPassword) => (), //do something with incorrect password
+//!     Err(error) => (), //do something with a different error
+//! }
+//! 
+//! println!("{}", String::from_utf8(&decrypted_data).unwrap());
+//! ```
+
+
 use aes_gcm_siv::{
     aead::{generic_array::GenericArray, rand_core::RngCore, Aead, OsRng},
     Aes256GcmSiv, KeyInit, Nonce,
@@ -6,8 +35,10 @@ use argon2::Config;
 use serde::{Deserialize, Serialize};
 use std::{error::Error, fmt::Display};
 
-pub type Res<T> = Result<T, Box<dyn Error>>;
-
+/// Error type for library, handles bincode encoding/decoding errors and key generation errors.
+/// Also provides a unique error for incorrect passwords.
+/// 
+/// Implements Debug, Display, Error, PartialEq, and Clone
 #[derive(Debug, Clone, PartialEq)]
 pub enum CryptographyError {
     DecodingFailure,
@@ -40,6 +71,15 @@ struct EncryptedFile {
     salt: [u8; 32],
 }
 
+/// Function for encrypting data.
+/// Takes any data and password input as a slice (&\[T\]) of u8 (bytes) and returns a Result wrapping a vector of u8.
+/// 
+/// ```rust
+/// let data = "Hello, world!";
+/// let password = "password";
+/// 
+/// let encrypted_data: Vec<u8> = encrypt(data.as_bytes(), password.as_bytes()).expect("Failed to encrypt!");
+/// ```
 pub fn encrypt(data: &[u8], password: &[u8]) -> Result<Vec<u8>, CryptographyError> {
     let mut salt = [0u8; 32];
     OsRng.fill_bytes(&mut salt);
@@ -71,6 +111,18 @@ pub fn encrypt(data: &[u8], password: &[u8]) -> Result<Vec<u8>, CryptographyErro
     bincode::serialize(&file).map_err(|_| CryptographyError::EncodingFailure)
 }
 
+
+/// Function for decrypting data.
+/// Takes encrypted data and password input as a slice (&\[T\]) of u8 (bytes) and returns a Result wrapping a vector of u8.
+/// 
+/// ```rust
+/// let data = "Hello, world!";
+/// let password = "password";
+/// 
+/// let encrypted_data: Vec<u8> = encrypt(data.as_bytes(), password.as_bytes()).expect("Failed to encrypt!");
+/// 
+/// let decrypted_data : Vec<u8>= decrypt(&encrypted_data, password.as_bytes()).expect("Failed to decrypt data!");
+/// ```
 pub fn decrypt(data: &[u8], password: &[u8]) -> Result<Vec<u8>, CryptographyError> {
     let decoded: EncryptedFile =
         bincode::deserialize(data).map_err(|_| CryptographyError::DecodingFailure)?;

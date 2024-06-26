@@ -3,7 +3,7 @@ name = "tinycrypt"
 version = "0.1.0"
 edition = "2021"
 description = "Small & simple encryption library with minimal dependencies"
-license = "The Unlicense"
+license = "Unlicense"
 documentation = "https://docs.rs/tinycrypt"
 repository = "https://github.com/Logan-010/tinycrypt"
 
